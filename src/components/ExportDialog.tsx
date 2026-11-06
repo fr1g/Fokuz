@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { CloseIcon, DownloadIcon } from 'tdesign-icons-react';
-import { EXT, baseName, downloadBlob, formatBytes, renderExport } from '../lib/export';
-import type { EditorState, ExportFormat, LoadedImage } from '../types';
+import {
+  EXT,
+  baseName,
+  downloadBlob,
+  formatBytes,
+  renderExport,
+  resolveExport,
+} from '../lib/export';
+import { ORIGINAL_EXPORTABLE, SOURCE_LABEL } from '../lib/image';
+import type { EditorState, ExportChoice, LoadedImage } from '../types';
 import { Seg } from './ui/Seg';
 import { Slider } from './ui/Slider';
 
@@ -12,11 +20,38 @@ interface ExportDialogProps {
   onClose: () => void;
 }
 
+function sourceNotice(sourceFormat: LoadedImage['sourceFormat']): string | null {
+  switch (sourceFormat) {
+    case 'tiff':
+      return '源图为 TIFF：导出会展平为单页图像，文件内置的图层 / 多页不会保留。';
+    case 'heic':
+      return '源图为 HEIC：浏览器无法编码 HEIC，无法按原格式导出，请选择 JPEG 或 WebP。';
+    case 'avif':
+      return '源图为 AVIF：浏览器无法编码 AVIF，无法按原格式导出，请选择 JPEG 或 WebP。';
+    case 'gif':
+      return '源图为 GIF：动图仅取第一帧，且浏览器无法编码 GIF，请选择 JPEG 或 WebP。';
+    case 'bmp':
+      return '源图为 BMP：浏览器无法编码 BMP，无法按原格式导出，请选择 JPEG 或 WebP。';
+    default:
+      return null;
+  }
+}
+
 export function ExportDialog({ open, image, state, onClose }: ExportDialogProps) {
-  const [format, setFormat] = useState<ExportFormat>('png');
+  const [choice, setChoice] = useState<ExportChoice>('original');
   const [quality, setQuality] = useState(90);
   const [estimate, setEstimate] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const originalAvailable = ORIGINAL_EXPORTABLE[image.sourceFormat];
+
+  // Defaults per open / per image: original format when possible; the quality
+  // slider starts at the source's own quality so "JPEG" means "compress further".
+  useEffect(() => {
+    if (!open) return;
+    setChoice(originalAvailable ? 'original' : 'jpeg');
+    setQuality(image.sourceFormat === 'jpeg' ? (image.originalQuality ?? 90) : 90);
+  }, [open, image, originalAvailable]);
 
   useEffect(() => {
     if (!open) return;
@@ -28,34 +63,58 @@ export function ExportDialog({ open, image, state, onClose }: ExportDialogProps)
   }, [open, onClose]);
 
   // Live size estimate (debounced — a full re-render per change is not cheap).
+  const estimating = choice === 'jpeg' || choice === 'webp' || (choice === 'original' && image.sourceFormat === 'webp');
   useEffect(() => {
-    if (!open || format === 'png') {
+    if (!open || !estimating) {
       setEstimate(null);
       return;
     }
     const t = setTimeout(async () => {
       try {
-        const blob = await renderExport(image, state, format, quality);
+        const { format, quality: q } = resolveExport(image, choice, quality);
+        const blob = await renderExport(image, state, format, q);
         setEstimate(blob.size);
       } catch {
         setEstimate(null);
       }
     }, 350);
     return () => clearTimeout(t);
-  }, [open, format, quality, image, state]);
+  }, [open, choice, quality, estimating, image, state]);
 
   if (!open) return null;
 
   const doExport = async () => {
     setBusy(true);
     try {
-      const blob = await renderExport(image, state, format, quality);
+      const { format, quality: q } = resolveExport(image, choice, quality);
+      const blob = await renderExport(image, state, format, q);
       downloadBlob(blob, `${baseName(image.name)}-focus.${EXT[format]}`);
       onClose();
     } finally {
       setBusy(false);
     }
   };
+
+  const notice = sourceNotice(image.sourceFormat);
+  const showQuality = choice === 'jpeg' || choice === 'webp';
+
+  const infoLine = (() => {
+    if (choice === 'original') {
+      switch (image.sourceFormat) {
+        case 'png':
+          return 'PNG 无损导出，像素与原图一致';
+        case 'jpeg':
+          return `按原图压缩规格重编码（检测到原图质量 ≈ Q${image.originalQuality ?? '?'}）`;
+        case 'webp':
+          return '按原图格式重编码（WebP 固定 Q90）';
+        case 'tiff':
+          return 'TIFF 无压缩导出（文件较大，适合印刷 / 后期）';
+        default:
+          return null;
+      }
+    }
+    return estimate !== null ? `预计大小：${formatBytes(estimate)}` : '正在估算文件大小…';
+  })();
 
   return (
     <div
@@ -79,23 +138,37 @@ export function ExportDialog({ open, image, state, onClose }: ExportDialogProps)
 
         <div className="space-y-4">
           <div>
-            <div className="mb-1.5 text-xs text-neutral-400">格式</div>
-            <Seg
+            <div className="mb-1.5 text-xs text-neutral-400">
+              格式（源图：{SOURCE_LABEL[image.sourceFormat]} · 分辨率保持原图 {image.width} ×{' '}
+              {image.height}）
+            </div>
+            <Seg<ExportChoice>
               className="w-full"
-              value={format}
-              onChange={(v) => setFormat(v)}
+              value={choice}
+              onChange={(v) => setChoice(v)}
               options={[
-                { value: 'png', label: 'PNG' },
-                { value: 'jpeg', label: 'JPG' },
-                { value: 'webp', label: 'WebP' },
+                {
+                  value: 'original',
+                  label: `原格式(${
+                    image.sourceFormat === 'jpeg' ? 'JPEG' : SOURCE_LABEL[image.sourceFormat]
+                  })`,
+                  disabled: !originalAvailable,
+                  title: originalAvailable
+                    ? `按 ${SOURCE_LABEL[image.sourceFormat]} 原有的规格和压缩程度导出`
+                    : '浏览器无法编码该格式',
+                },
+                { value: 'jpeg', label: 'JPEG', title: '重新编码为 JPEG，可自选压缩程度' },
+                { value: 'webp', label: 'WebP', title: '重新编码为 WebP，可自选压缩程度' },
               ]}
             />
-            <p className="mt-1.5 text-xs text-neutral-500">
-              PNG 无损 · 分辨率与原图一致（{image.width} × {image.height}）
-            </p>
+            {notice && (
+              <p className="mt-1.5 rounded bg-amber-500/10 px-2.5 py-1.5 text-xs leading-relaxed text-amber-400">
+                {notice}
+              </p>
+            )}
           </div>
 
-          {format !== 'png' && (
+          {showQuality && (
             <Slider
               label="质量"
               min={1}
@@ -106,13 +179,11 @@ export function ExportDialog({ open, image, state, onClose }: ExportDialogProps)
             />
           )}
 
-          <div className="rounded-lg bg-neutral-800/60 px-3 py-2 text-xs text-neutral-400">
-            {format === 'png'
-              ? '无损导出，画质与原图完全一致'
-              : estimate !== null
-                ? `预计大小：${formatBytes(estimate)}`
-                : '正在估算文件大小…'}
-          </div>
+          {infoLine && (
+            <div className="rounded-lg bg-neutral-800/60 px-3 py-2 text-xs text-neutral-400">
+              {infoLine}
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-1">
             <button

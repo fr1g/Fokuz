@@ -4,6 +4,11 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  // heic2any is dynamically imported (large wasm); pre-bundle it so dev
+  // doesn't mid-session reload when a HEIC file first hits the decoder.
+  optimizeDeps: {
+    include: ['heic2any'],
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -15,13 +20,13 @@ export default defineConfig({
         description: '给图片画一个选区，对选区外做遮挡、模糊或马赛克，选区内可放大镜放大，导出与原图同分辨率的图片。',
         lang: 'zh-CN',
         theme_color: '#0a0a0a',
-        background_color: '#0a0a0a',
+        background_color: '#50505a',
         display: 'standalone',
         start_url: '/',
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {

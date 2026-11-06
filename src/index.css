@@ -1,5 +1,36 @@
 @import 'tailwindcss';
 
+:root {
+  color-scheme: dark;
+}
+
+/* Narrow global scrollbar: zinc-500 thumb over the app base background.
+   Standard properties first (Firefox / Chrome 121+); the -webkit rules are
+   the fallback for older Chromium, which ignores them once the standard
+   properties are set. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-zinc-500) var(--color-neutral-950);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-neutral-950);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-zinc-500);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-zinc-400);
+}
+
 html,
 body,
 #root {

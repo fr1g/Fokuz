@@ -1,5 +1,13 @@
 export type Shape = 'rect' | 'roundRect' | 'ellipse';
 
+/** Image container formats the tool can import. */
+export type SourceFormat = 'png' | 'jpeg' | 'webp' | 'tiff' | 'heic' | 'avif' | 'gif' | 'bmp' | 'unknown';
+
+export type ExportFormat = 'png' | 'jpeg' | 'webp' | 'tiff';
+
+/** The three export buttons: keep the source format & specs, or re-encode. */
+export type ExportChoice = 'original' | 'jpeg' | 'webp';
+
 /** Bounding box in original image pixels (w, h > 0). */
 export interface Selection {
   shape: Shape;
@@ -31,9 +39,11 @@ export interface LoadedImage {
   name: string;
   width: number;
   height: number;
+  /** Container format of the imported file; drives the default export format. */
+  sourceFormat: SourceFormat;
+  /** Estimated quality the source JPEG was encoded with (1-100), null otherwise. */
+  originalQuality: number | null;
 }
-
-export type ExportFormat = 'png' | 'jpeg' | 'webp';
 
 export const DEFAULT_EFFECTS: EffectState = {
   overlay: { enabled: true, color: 'black', opacity: 0.5 },

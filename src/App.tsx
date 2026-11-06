@@ -5,7 +5,7 @@ import { EffectPanel } from './components/EffectPanel';
 import { ExportDialog } from './components/ExportDialog';
 import { Toolbar } from './components/Toolbar';
 import { useHistory } from './hooks/useHistory';
-import { loadImageFile } from './lib/image';
+import { decodeImageFile, detectFormat } from './lib/image';
 import { DEFAULT_EFFECTS, type EditorState, type LoadedImage, type Shape } from './types';
 
 export default function App() {
@@ -13,6 +13,7 @@ export default function App() {
   const [tool, setTool] = useState<Shape>('rect');
   const [exportOpen, setExportOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [decoding, setDecoding] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hist = useHistory<EditorState>({ selection: null, effects: { ...DEFAULT_EFFECTS } });
@@ -22,13 +23,17 @@ export default function App() {
   exportOpenRef.current = exportOpen;
 
   const loadFile = useCallback(async (file: File) => {
+    setDecoding(true);
     try {
-      const img = await loadImageFile(file);
+      const format = await detectFormat(file);
+      const img = await decodeImageFile(file, format);
       setImage(img);
       setError(null);
       histRef.current.reset({ selection: null, effects: { ...DEFAULT_EFFECTS } });
     } catch {
-      setError('无法加载这张图片，请换一张试试');
+      setError('无法解码这张图片，可能已损坏或格式不受支持');
+    } finally {
+      setDecoding(false);
     }
   }, []);
 
@@ -96,11 +101,11 @@ export default function App() {
   const openFile = () => fileInputRef.current?.click();
 
   return (
-    <div className="flex h-dvh flex-col bg-neutral-950 text-neutral-200">
+    <div className="flex h-dvh flex-col overflow-hidden bg-neutral-950 text-neutral-200">
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,.heic,.heif,.tif,.tiff"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
@@ -125,7 +130,7 @@ export default function App() {
         <div className="bg-red-500/10 px-4 py-1.5 text-center text-sm text-red-400">{error}</div>
       )}
       {image ? (
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+        <div className="relative flex min-h-0 flex-1 flex-col md:flex-row">
           <CanvasStage
             image={image}
             tool={tool}
@@ -143,7 +148,7 @@ export default function App() {
           />
         </div>
       ) : (
-        <Dropzone onOpenFile={openFile} error={error} />
+        <Dropzone onOpenFile={openFile} error={error} decoding={decoding} />
       )}
       {image && (
         <ExportDialog

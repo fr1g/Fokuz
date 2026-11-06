@@ -68,27 +68,27 @@ function RedoIcon({ size = 16 }: { size?: number }) {
 export function Toolbar(p: ToolbarProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-1.5 border-b border-neutral-800 bg-neutral-900 px-3">
-      <span className="mr-3 select-none text-lg font-bold tracking-wide text-blue-500">Fokuz</span>
       {p.hasImage && (
         <button
           type="button"
           onClick={p.onOpenFile}
-          className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm text-neutral-300 transition-colors hover:bg-neutral-700 hover:text-white"
+          className="flex items-center gap-1 rounded-md p-1 md:px-3 md:py-1.75 text-xs md:texd-md text-neutral-300 transition-colors hover:bg-neutral-700 hover:text-white bg-neutral-600/20"
         >
-          <ImageIcon size={15} /> 换图
+          <ImageIcon className='hidden! md:inline-block!' size={15} /> 换图
         </button>
       )}
-      <div className="mx-1 h-6 w-px bg-neutral-800" />
+      <div className="mx-1 h-6 w-px bg-neutral-800 hidden md:block" />
       <Seg<Shape>
         value={p.tool}
         onChange={p.onTool}
+        className='scale-[85.5%] md:scale-100'
         options={[
           { value: 'rect', icon: <RectangleGlyph />, title: '矩形选区' },
           { value: 'roundRect', icon: <RoundRectIcon />, title: '圆角矩形选区' },
           { value: 'ellipse', icon: <CircleGlyph />, title: '椭圆选区' },
         ]}
       />
-      <div className="mx-1 h-6 w-px bg-neutral-800" />
+      <div className="mx-1 h-6 w-px bg-neutral-800 hidden md:block" />
       <IconBtn title="撤销（Ctrl+Z）" disabled={!p.canUndo} onClick={p.onUndo}>
         <RollbackIcon />
       </IconBtn>
@@ -103,9 +103,9 @@ export function Toolbar(p: ToolbarProps) {
         <button
           type="button"
           onClick={p.onExport}
-          className="flex items-center gap-1.5 rounded-md bg-blue-500 px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-400"
+          className="flex items-center gap-1.5 rounded-md bg-blue-500 p-1 md:px-3 md:py-1.75 text-xs font-medium md:texd-md text-white transition-colors hover:bg-blue-400"
         >
-          <DownloadIcon size={15} /> 导出
+          <DownloadIcon size={15} className='hidden! md:inline-block!' /> 导出
         </button>
       )}
     </header>

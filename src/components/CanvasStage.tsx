@@ -500,7 +500,7 @@ export function CanvasStage({ image, tool, state, onPreview, onCommitBaseline }:
   return (
     <div ref={wrapRef} className="relative min-h-0 flex-1 touch-none select-none overflow-hidden bg-[#121212]">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none" />
-      <div className="absolute right-3 bottom-3 flex items-center overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900/90 text-sm shadow-lg">
+      <div className="absolute right-3 bottom-14 flex items-center overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900/90 text-sm shadow-lg md:bottom-3">
         <button
           type="button"
           title="缩小"

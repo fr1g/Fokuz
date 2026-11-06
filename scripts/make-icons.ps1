@@ -1,23 +1,16 @@
-Add-Type -AssemblyName System.Drawing
+# Regenerate the PWA icon set from the source appicon.png (root directory).
+# Requires ImageMagick 7 (magick on PATH). The zinc background (#50505a) is
+# part of the source image; the maskable variant is padded to keep the glyph
+# inside the ~80% safe zone for circular masks.
 
-function New-Icon([int]$size, [string]$path) {
-  $bmp = New-Object System.Drawing.Bitmap $size, $size
-  $g = [System.Drawing.Graphics]::FromImage($bmp)
-  $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-  $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
-  $g.Clear([System.Drawing.Color]::FromArgb(255, 37, 99, 235))
-  $font = New-Object System.Drawing.Font("Segoe UI", ($size * 0.55), [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
-  $fmt = New-Object System.Drawing.StringFormat
-  $fmt.Alignment = [System.Drawing.StringAlignment]::Center
-  $fmt.LineAlignment = [System.Drawing.StringAlignment]::Center
-  $box = New-Object System.Drawing.RectangleF 0, 0, $size, $size
-  $g.DrawString("F", $font, [System.Drawing.Brushes]::White, $box, $fmt)
-  $g.Dispose()
-  $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
-  $bmp.Dispose()
-  Write-Host "wrote $path"
-}
+$ErrorActionPreference = "Stop"
+$root = Split-Path $PSScriptRoot -Parent
+$src = Join-Path $root "appicon.png"
+$public = Join-Path $root "public"
 
-$public = Join-Path $PSScriptRoot "..\public"
-New-Icon 192 (Join-Path $public "pwa-192.png")
-New-Icon 512 (Join-Path $public "pwa-512.png")
+magick $src -filter Lanczos -resize 512x512 -unsharp 0x0.75+0.75+0.008 (Join-Path $public "pwa-512.png")
+magick $src -filter Lanczos -resize 192x192 (Join-Path $public "pwa-192.png")
+magick $src -resize 64x64 (Join-Path $public "favicon.png")
+magick $src -filter Lanczos -resize 340x340 -background "#50505a" -gravity center -extent 512x512 (Join-Path $public "pwa-maskable-512.png")
+
+Write-Host "icons regenerated into public/"

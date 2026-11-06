@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { ChevronUpIcon } from 'tdesign-icons-react';
 import type { EffectState, EditorState, Shape } from '../types';
 import { Section } from './ui/Section';
 import { Seg } from './ui/Seg';
@@ -25,6 +26,7 @@ export function EffectPanel({
   snapshot,
   onCommitBaseline,
 }: EffectPanelProps) {
+  const [open, setOpen] = useState(false);
   const editingRef = useRef(false);
   const baselineRef = useRef<EditorState | null>(null);
 
@@ -48,8 +50,54 @@ export function EffectPanel({
     if (b) onCommitBaseline(b);
   };
 
+  const shared = { effects, shape, patch, beginEdit, endEdit };
+
   return (
-    <aside className="w-full shrink-0 overflow-y-auto border-t border-neutral-800 bg-neutral-900 md:w-80 md:border-t-0 md:border-l">
+    <>
+      {/* Mobile: floating bottom sheet, toggled by the tab bar below. */}
+      <div
+        className={`absolute inset-x-0 bottom-[calc(2.75rem+env(safe-area-inset-bottom))] z-40 max-h-[68dvh] overflow-y-auto rounded-t-2xl border-t border-neutral-700 bg-neutral-900 shadow-[0_-8px_30px_rgba(0,0,0,0.55)] transition-transform duration-300 ease-out md:hidden ${
+          open ? 'translate-y-0' : 'translate-y-[110%]'
+        }`}
+      >
+        <PanelSections {...shared} />
+      </div>
+
+      {/* Mobile: bottom tab bar toggling the sheet. */}
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="absolute inset-x-0 bottom-0 z-50 flex h-11 items-center justify-center gap-1.5 border-t border-neutral-800 bg-neutral-900/95 pb-[env(safe-area-inset-bottom)] text-sm text-neutral-300 backdrop-blur-sm md:hidden"
+      >
+        <ChevronUpIcon className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+        效果参数
+      </button>
+
+      {/* Desktop: static sidebar. */}
+      <aside className="hidden w-80 shrink-0 overflow-y-auto border-l border-neutral-800 bg-neutral-900 md:block">
+        <PanelSections {...shared} />
+      </aside>
+    </>
+  );
+}
+
+/** Panel content shared by the mobile sheet and the desktop sidebar. */
+function PanelSections({
+  effects,
+  shape,
+  patch,
+  beginEdit,
+  endEdit,
+}: {
+  effects: EffectState;
+  shape: Shape;
+  patch: (partial: Partial<EffectState>, commit: boolean) => void;
+  beginEdit: () => void;
+  endEdit: () => void;
+}) {
+  return (
+    <div>
       <Section
         title="选区外遮挡"
         right={
@@ -176,10 +224,10 @@ export function EffectPanel({
         </Section>
       )}
 
-      <p className="px-4 py-3 text-xs leading-relaxed text-neutral-500">
+      <p className="p-3 text-xs leading-relaxed text-neutral-500">
         按住 Shift 拖拽可画出正方形 / 正圆，调整大小时按住 Shift 锁定宽高比。
       </p>
-    </aside>
+    </div>
   );
 }
 
@@ -208,11 +256,10 @@ function ColorRow({
             onChange(c);
             onEditEnd();
           }}
-          className={`h-6 w-6 rounded-full border transition-shadow ${
-            value.toLowerCase() === c
+          className={`h-6 w-6 rounded-full border transition-shadow ${value.toLowerCase() === c
               ? 'ring-2 ring-blue-400 ring-offset-1 ring-offset-neutral-900'
               : 'border-neutral-600'
-          }`}
+            }`}
           style={{ backgroundColor: c }}
         />
       ))}
