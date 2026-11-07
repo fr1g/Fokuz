@@ -14,6 +14,7 @@ import {
   type Handle,
   type Pt,
 } from '../lib/geometry';
+import { t, useLocale } from '../lib/i18n';
 import { buildObscureLayer, renderScene } from '../lib/render';
 import type { EditorState, LoadedImage, Selection, Shape } from '../types';
 
@@ -50,6 +51,7 @@ interface CanvasStageProps {
 }
 
 export function CanvasStage({ image, tool, state, onPreview, onCommitBaseline }: CanvasStageProps) {
+  useLocale();
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [view, setViewState] = useState<View>({ scale: 1, x: 0, y: 0 });
@@ -500,10 +502,10 @@ export function CanvasStage({ image, tool, state, onPreview, onCommitBaseline }:
   return (
     <div ref={wrapRef} className="relative min-h-0 flex-1 touch-none select-none overflow-hidden bg-[#121212]">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full touch-none" />
-      <div className="absolute right-3 bottom-14 flex items-center overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900/90 text-sm shadow-lg md:bottom-3">
+      <div className="absolute right-3 bottom-[calc(3.875rem+var(--debug-pad,0px)+env(safe-area-inset-bottom))] flex items-center overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900/90 text-sm shadow-lg md:bottom-3">
         <button
           type="button"
-          title="缩小"
+          title={t('zoomOut')}
           disabled={atMin}
           onClick={() => zoomAtCenter(1 / 1.25)}
           className="h-8 w-8 text-neutral-300 hover:bg-neutral-700 hover:text-white disabled:pointer-events-none disabled:opacity-30"
@@ -513,7 +515,7 @@ export function CanvasStage({ image, tool, state, onPreview, onCommitBaseline }:
         <span className="w-13 text-center tabular-nums text-neutral-300">{zoomPct}%</span>
         <button
           type="button"
-          title="放大"
+          title={t('zoomIn')}
           disabled={atMax}
           onClick={() => zoomAtCenter(1.25)}
           className="h-8 w-8 text-neutral-300 hover:bg-neutral-700 hover:text-white disabled:pointer-events-none disabled:opacity-30"
@@ -522,11 +524,11 @@ export function CanvasStage({ image, tool, state, onPreview, onCommitBaseline }:
         </button>
         <button
           type="button"
-          title="适应窗口（双击画布空白处）"
+          title={t('fitTitle')}
           onClick={fitView}
           className="h-8 border-l border-neutral-700 px-2 text-xs text-neutral-300 hover:bg-neutral-700 hover:text-white"
         >
-          适应
+          {t('fit')}
         </button>
       </div>
     </div>

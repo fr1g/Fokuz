@@ -4,6 +4,11 @@
   color-scheme: dark;
 }
 
+/* ?debug=true → +5px on the mobile top paddings (toolbar, collapsed panel tab). */
+.debug-layout {
+  --debug-pad: 5px;
+}
+
 /* Narrow global scrollbar: zinc-500 thumb over the app base background.
    Standard properties first (Firefox / Chrome 121+); the -webkit rules are
    the fallback for older Chromium, which ignores them once the standard

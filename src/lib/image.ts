@@ -20,14 +20,14 @@ export const ORIGINAL_EXPORTABLE: Record<SourceFormat, boolean> = {
 
 export const SOURCE_LABEL: Record<SourceFormat, string> = {
   png: 'PNG',
-  jpeg: 'JPG',
+  jpeg: 'JPEG',
   webp: 'WebP',
   tiff: 'TIFF',
   heic: 'HEIC',
   avif: 'AVIF',
   gif: 'GIF',
   bmp: 'BMP',
-  unknown: '未知格式',
+  unknown: 'Unknown',
 };
 
 /** Sniff the real container format from magic bytes; MIME is only a fallback. */

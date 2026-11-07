@@ -1,4 +1,5 @@
 import { ImageIcon } from 'tdesign-icons-react';
+import { t, useLocale } from '../lib/i18n';
 
 interface DropzoneProps {
   onOpenFile: () => void;
@@ -7,6 +8,7 @@ interface DropzoneProps {
 }
 
 export function Dropzone({ onOpenFile, error, decoding }: DropzoneProps) {
+  useLocale();
   return (
     <div
       onClick={() => !decoding && onOpenFile()}
@@ -17,10 +19,10 @@ export function Dropzone({ onOpenFile, error, decoding }: DropzoneProps) {
         <ImageIcon size={44} />
       </div>
       {decoding ? (
-        <p className="animate-pulse text-base text-neutral-300">正在解码图片…</p>
+        <p className="animate-pulse text-base text-neutral-300">{t('decoding')}</p>
       ) : (
         <div>
-          <p className="text-base text-neutral-200">点击选择图片，或拖拽到页面 / 按 Ctrl+V 粘贴</p>
+          <p className="text-base text-neutral-200">{t('dropTitle')}</p>
           <p className="mt-2 text-sm text-neutral-500">
             支持 PNG / JPG / WebP 等 :: 所有处理均在本地完成，网络基本0依赖
           </p>

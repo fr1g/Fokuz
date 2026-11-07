@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { t, useLocale } from '../lib/i18n';
 import { ChevronUpIcon } from 'tdesign-icons-react';
 import type { EffectState, EditorState, Shape } from '../types';
 import { Section } from './ui/Section';
@@ -26,6 +27,7 @@ export function EffectPanel({
   snapshot,
   onCommitBaseline,
 }: EffectPanelProps) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const editingRef = useRef(false);
   const baselineRef = useRef<EditorState | null>(null);
@@ -56,7 +58,7 @@ export function EffectPanel({
     <>
       {/* Mobile: floating bottom sheet, toggled by the tab bar below. */}
       <div
-        className={`absolute inset-x-0 bottom-[calc(2.75rem+env(safe-area-inset-bottom))] z-40 max-h-[68dvh] overflow-y-auto rounded-t-2xl border-t border-neutral-700 bg-neutral-900 shadow-[0_-8px_30px_rgba(0,0,0,0.55)] transition-transform duration-300 ease-out md:hidden ${
+        className={`absolute inset-x-0 bottom-[calc(3.125rem+var(--debug-pad,0px)+env(safe-area-inset-bottom))] z-40 max-h-[68dvh] overflow-y-auto rounded-t-2xl border-t border-neutral-700 bg-neutral-900 shadow-[0_-8px_30px_rgba(0,0,0,0.55)] transition-transform duration-300 ease-out md:hidden ${
           open ? 'translate-y-0' : 'translate-y-[110%]'
         }`}
       >
@@ -68,10 +70,10 @@ export function EffectPanel({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="absolute inset-x-0 bottom-0 z-50 flex h-11 items-center justify-center gap-1.5 border-t border-neutral-800 bg-neutral-900/95 pb-[env(safe-area-inset-bottom)] text-sm text-neutral-300 backdrop-blur-sm md:hidden"
+        className="absolute inset-x-0 bottom-0 z-50 flex h-[calc(3.125rem+var(--debug-pad,0px)+env(safe-area-inset-bottom))] items-center justify-center gap-1.5 border-t border-neutral-800 bg-neutral-900/95 pb-[env(safe-area-inset-bottom)] text-sm text-neutral-300 backdrop-blur-sm md:hidden"
       >
         <ChevronUpIcon className={`transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
-        效果参数
+        {t('panelTab')}
       </button>
 
       {/* Desktop: static sidebar. */}
@@ -96,10 +98,11 @@ function PanelSections({
   beginEdit: () => void;
   endEdit: () => void;
 }) {
+  useLocale();
   return (
     <div>
       <Section
-        title="选区外遮挡"
+        title={t('dimTitle')}
         right={
           <Toggle
             checked={effects.overlay.enabled}
@@ -112,12 +115,12 @@ function PanelSections({
           value={effects.overlay.color}
           onChange={(v) => patch({ overlay: { ...effects.overlay, color: v } }, true)}
           options={[
-            { value: 'black', label: '黑色' },
-            { value: 'white', label: '白色' },
+            { value: 'black', label: t('black') },
+            { value: 'white', label: t('white') },
           ]}
         />
         <Slider
-          label="不透明度"
+          label={t('opacity')}
           min={0}
           max={1}
           step={0.05}
@@ -130,19 +133,19 @@ function PanelSections({
         />
       </Section>
 
-      <Section title="模糊 / 马赛克">
+      <Section title={t('obscureTitle')}>
         <Seg
           className="w-full"
           value={effects.obscure.mode}
           onChange={(v) => patch({ obscure: { ...effects.obscure, mode: v } }, true)}
           options={[
-            { value: 'none', label: '无' },
-            { value: 'blur', label: '模糊' },
-            { value: 'mosaic', label: '马赛克' },
+            { value: 'none', label: t('none') },
+            { value: 'blur', label: t('blur') },
+            { value: 'mosaic', label: t('mosaic') },
           ]}
         />
         <Slider
-          label="强度"
+          label={t('strength')}
           min={2}
           max={64}
           value={effects.obscure.strength}
@@ -155,7 +158,7 @@ function PanelSections({
       </Section>
 
       <Section
-        title="选区描边"
+        title={t('strokeTitle')}
         right={
           <Toggle
             checked={effects.stroke.enabled}
@@ -171,7 +174,7 @@ function PanelSections({
           onChange={(c) => patch({ stroke: { ...effects.stroke, color: c } }, false)}
         />
         <Slider
-          label="描边宽度"
+          label={t('strokeWidth')}
           min={0}
           max={40}
           value={effects.stroke.width}
@@ -184,7 +187,7 @@ function PanelSections({
       </Section>
 
       <Section
-        title="放大镜"
+        title={t('magnifyTitle')}
         right={
           <Toggle
             checked={effects.magnify.enabled}
@@ -193,7 +196,7 @@ function PanelSections({
         }
       >
         <Slider
-          label="放大倍数"
+          label={t('magnification')}
           min={1}
           max={4}
           step={0.1}
@@ -209,9 +212,9 @@ function PanelSections({
       </Section>
 
       {shape === 'roundRect' && (
-        <Section title="圆角">
+        <Section title={t('cornerTitle')}>
           <Slider
-            label="圆角比例"
+            label={t('radius')}
             min={0}
             max={0.5}
             step={0.05}
@@ -225,7 +228,7 @@ function PanelSections({
       )}
 
       <p className="p-3 text-xs leading-relaxed text-neutral-500">
-        按住 Shift 拖拽可画出正方形 / 正圆，调整大小时按住 Shift 锁定宽高比。
+        {t('shiftHint')}
       </p>
     </div>
   );

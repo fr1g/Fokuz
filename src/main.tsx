@@ -2,7 +2,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
+import { DEBUG_LAYOUT } from './lib/debug';
 import './index.css';
+
+if (DEBUG_LAYOUT) document.documentElement.classList.add('debug-layout');
 
 registerSW({ immediate: true });
 

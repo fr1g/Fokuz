@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { t, useLocale } from '../lib/i18n';
 import { CloseIcon, DownloadIcon } from 'tdesign-icons-react';
 import {
   EXT,
@@ -23,21 +24,22 @@ interface ExportDialogProps {
 function sourceNotice(sourceFormat: LoadedImage['sourceFormat']): string | null {
   switch (sourceFormat) {
     case 'tiff':
-      return '源图为 TIFF：导出会展平为单页图像，文件内置的图层 / 多页不会保留。';
+      return t('noticeTiff');
     case 'heic':
-      return '源图为 HEIC：浏览器无法编码 HEIC，无法按原格式导出，请选择 JPEG 或 WebP。';
+      return t('noticeHeic');
     case 'avif':
-      return '源图为 AVIF：浏览器无法编码 AVIF，无法按原格式导出，请选择 JPEG 或 WebP。';
+      return t('noticeAvif');
     case 'gif':
-      return '源图为 GIF：动图仅取第一帧，且浏览器无法编码 GIF，请选择 JPEG 或 WebP。';
+      return t('noticeGif');
     case 'bmp':
-      return '源图为 BMP：浏览器无法编码 BMP，无法按原格式导出，请选择 JPEG 或 WebP。';
+      return t('noticeBmp');
     default:
       return null;
   }
 }
 
 export function ExportDialog({ open, image, state, onClose }: ExportDialogProps) {
+  useLocale();
   const [choice, setChoice] = useState<ExportChoice>('original');
   const [quality, setQuality] = useState(90);
   const [estimate, setEstimate] = useState<number | null>(null);
@@ -102,18 +104,18 @@ export function ExportDialog({ open, image, state, onClose }: ExportDialogProps)
     if (choice === 'original') {
       switch (image.sourceFormat) {
         case 'png':
-          return 'PNG 无损导出，像素与原图一致';
+          return t('pngInfo');
         case 'jpeg':
-          return `按原图压缩规格重编码（检测到原图质量 ≈ Q${image.originalQuality ?? '?'}）`;
+          return t('jpegOriginalInfo', image.originalQuality ?? '?');
         case 'webp':
-          return '按原图格式重编码（WebP 固定 Q90）';
+          return t('webpOriginalInfo');
         case 'tiff':
-          return 'TIFF 无压缩导出（文件较大，适合印刷 / 后期）';
+          return t('tiffInfo');
         default:
           return null;
       }
     }
-    return estimate !== null ? `预计大小：${formatBytes(estimate)}` : '正在估算文件大小…';
+    return estimate !== null ? t('estimatedSize', formatBytes(estimate)) : t('estimatingSize');
   })();
 
   return (
@@ -126,7 +128,7 @@ export function ExportDialog({ open, image, state, onClose }: ExportDialogProps)
         onClick={(e) => e.stopPropagation()}
       >
         <header className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold">导出图片</h2>
+          <h2 className="text-base font-semibold">{t('exportImage')}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -139,8 +141,7 @@ export function ExportDialog({ open, image, state, onClose }: ExportDialogProps)
         <div className="space-y-4">
           <div>
             <div className="mb-1.5 text-xs text-neutral-400">
-              格式（源图：{SOURCE_LABEL[image.sourceFormat]} · 分辨率保持原图 {image.width} ×{' '}
-              {image.height}）
+              {t('formatHeader', SOURCE_LABEL[image.sourceFormat], image.width, image.height)}
             </div>
             <Seg<ExportChoice>
               className="w-full"
@@ -149,16 +150,14 @@ export function ExportDialog({ open, image, state, onClose }: ExportDialogProps)
               options={[
                 {
                   value: 'original',
-                  label: `原格式(${
-                    image.sourceFormat === 'jpeg' ? 'JPEG' : SOURCE_LABEL[image.sourceFormat]
-                  })`,
+                  label: t('originalFmt', SOURCE_LABEL[image.sourceFormat]),
                   disabled: !originalAvailable,
                   title: originalAvailable
-                    ? `按 ${SOURCE_LABEL[image.sourceFormat]} 原有的规格和压缩程度导出`
-                    : '浏览器无法编码该格式',
+                    ? t('originalTitle', SOURCE_LABEL[image.sourceFormat])
+                    : t('originalUnavailable'),
                 },
-                { value: 'jpeg', label: 'JPEG', title: '重新编码为 JPEG，可自选压缩程度' },
-                { value: 'webp', label: 'WebP', title: '重新编码为 WebP，可自选压缩程度' },
+                { value: 'jpeg', label: 'JPEG', title: t('quality') + ' · JPEG' },
+                { value: 'webp', label: 'WebP', title: t('quality') + ' · WebP' },
               ]}
             />
             {notice && (
@@ -170,7 +169,7 @@ export function ExportDialog({ open, image, state, onClose }: ExportDialogProps)
 
           {showQuality && (
             <Slider
-              label="质量"
+              label={t('quality')}
               min={1}
               max={100}
               value={quality}
@@ -191,7 +190,7 @@ export function ExportDialog({ open, image, state, onClose }: ExportDialogProps)
               onClick={onClose}
               className="rounded-md px-4 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800"
             >
-              取消
+              {t('cancel')}
             </button>
             <button
               type="button"
@@ -199,7 +198,7 @@ export function ExportDialog({ open, image, state, onClose }: ExportDialogProps)
               disabled={busy}
               className="flex items-center gap-1.5 rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-400 disabled:opacity-50"
             >
-              <DownloadIcon size={15} /> {busy ? '生成中…' : '导出并下载'}
+              <DownloadIcon size={15} /> {busy ? t('rendering') : t('exportDownload')}
             </button>
           </div>
         </div>

@@ -5,10 +5,12 @@ import { EffectPanel } from './components/EffectPanel';
 import { ExportDialog } from './components/ExportDialog';
 import { Toolbar } from './components/Toolbar';
 import { useHistory } from './hooks/useHistory';
+import { t, useLocale } from './lib/i18n';
 import { decodeImageFile, detectFormat } from './lib/image';
 import { DEFAULT_EFFECTS, type EditorState, type LoadedImage, type Shape } from './types';
 
 export default function App() {
+  useLocale();
   const [image, setImage] = useState<LoadedImage | null>(null);
   const [tool, setTool] = useState<Shape>('rect');
   const [exportOpen, setExportOpen] = useState(false);
@@ -31,7 +33,7 @@ export default function App() {
       setError(null);
       histRef.current.reset({ selection: null, effects: { ...DEFAULT_EFFECTS } });
     } catch {
-      setError('无法解码这张图片，可能已损坏或格式不受支持');
+      setError(t('decodeError'));
     } finally {
       setDecoding(false);
     }
